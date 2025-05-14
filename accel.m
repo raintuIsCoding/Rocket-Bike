@@ -1,8 +1,6 @@
-clc; clear; close all;
-
 function plot_accel()
     % Load data
-    data = load('dropTest.mat');
+    data = load('data/dropTest.mat');
     varName = fieldnames(data);
     T = data.(varName{1}); % Dynamically extract the table
 

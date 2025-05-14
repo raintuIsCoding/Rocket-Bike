@@ -25,7 +25,7 @@ v2 = v1(end) * ones(size(t2));
 x2 = x1(end) + cumtrapz(t2, v2);
 
 %% === PHASE 3: Motor Burn with CSV Thrust Curve ===
-thrust_data = readmatrix('AeroTech_I115W.csv');
+thrust_data = readmatrix('data/AeroTech_I115W.csv');
 thrust_time = thrust_data(:,1);
 thrust_force = thrust_data(:,2);
 t3 = 0:dt:thrust_time(end);
@@ -59,7 +59,7 @@ fprintf("Total distance traveled: %.2f meters (%.2f feet)\n", x_all(end), x_all(
 fprintf("FOS 2.0: %.2f meters (%.2f feet)\n", x_all(end)*2, x_all(end)*3.281*2);
 
 %% === REAL DATA IMPORT & PROCESSING ===
-data = load('carTest3.mat');
+data = load('data/carTest3.mat');
 accel = data.Acceleration;
 
 % === CONFIGURABLE SETTINGS ===

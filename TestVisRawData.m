@@ -13,7 +13,7 @@ a_sim = (I_total / burn_time) / m * ones(size(t_sim));
 v_sim = v0 + cumtrapz(t_sim, a_sim);
 
 %% === IMPORT MEASURED ACCELERATION DATA ===
-data = load('carTest.mat');
+data = load('data/carTest.mat');
 % Extract the acceleration table
 accel = data.Acceleration;
 
