@@ -1,0 +1,127 @@
+clc; clear; close all;
+
+%% === CONFIGURABLE PARAMETERS ===
+P0 = 2000 * 6894.76;    % Initial tank pressure in Pa (2000 psi)
+V_tank = 11e-3;         % Tank volume in m^3 (11 liters)
+T0 = 293;               % Initial temperature in K
+R = 287;                % Specific gas constant for air (J/kg·K)
+gamma = 1.4;            % Heat capacity ratio for air
+d_nozzle = 0.0127;     % Nozzle diameter in meters (1/2 in)
+A_nozzle = pi * (d_nozzle/2)^2;
+P_atm = 83400;         % Atmospheric pressure (Pa)
+mass_total = 81.65;     % Mass of rider + vehicle
+dt = 0.01;              % Time step (s)
+t_max = 10;             % Total simulation time (s)
+
+%% === INITIAL CONDITIONS ===
+rho0 = P0 / (R * T0);             % Initial air density
+m_air = rho0 * V_tank;            % Initial air mass
+P = P0;                           % Tank pressure
+T = T0;                           % Assume adiabatic, start at T0
+
+%% === TIME INTEGRATION SETUP ===
+time = 0:dt:t_max;
+F_thrust = zeros(size(time));
+P_tank = zeros(size(time));
+m_dot_log = zeros(size(time));
+m_air_log = zeros(size(time));
+
+for i = 1:length(time)
+    if P <= P_atm
+        break;  % Stop thrust when pressure equalizes
+    end
+
+    % === Determine if flow is choked
+    critical_P = P * (2 / (gamma + 1))^(gamma / (gamma - 1));
+
+    if ~exist('choke_break_index', 'var') && critical_P <= P_atm
+        choke_break_index = i;  % Mark the moment choked flow ends
+    end
+
+    if critical_P > P_atm  % Choked flow
+        m_dot = A_nozzle * P * sqrt(gamma / (R * T) * ...
+                 (2 / (gamma + 1))^((gamma + 1)/(gamma - 1)));
+        v_exit = sqrt(gamma * R * T);  % Choked exit velocity
+    else  % Non-choked flow
+        P_ratio = P_atm / P;
+        m_dot = A_nozzle * P * sqrt((2 * gamma) / (R * T * (gamma - 1)) * ...
+               (P_ratio^(2/gamma) - P_ratio^((gamma + 1)/gamma)));
+        v_exit = sqrt(2 * R * T * (1 - (P_atm / P)^((gamma - 1)/gamma)));
+    end
+
+    thrust = m_dot * v_exit;
+    F_thrust(i) = thrust;
+    m_dot_log(i) = m_dot;
+    m_air_log(i) = m_air;
+    P_tank(i) = P;
+
+    % Update tank conditions
+    m_air = m_air - m_dot * dt;
+    P = (m_air / V_tank) * R * T;  % Ideal gas law
+end
+
+%% === TRIM OUTPUT TO ACTUAL SIM TIME ===
+valid_idx = find(F_thrust > 0);
+time = time(valid_idx);
+F_thrust = F_thrust(valid_idx);
+m_dot_log = m_dot_log(valid_idx);
+P_tank = P_tank(valid_idx);
+
+%% === ACCELERATION & VELOCITY INTEGRATION ===
+a = F_thrust / mass_total;
+v = 4.47 + cumtrapz(time, a);        % Start at 10 mph
+x = cumtrapz(time, v);               % Integrate that to get distance
+
+if exist('choke_break_index', 'var')
+    choke_break_time = time(choke_break_index);
+else
+    choke_break_time = NaN;  % In case flow stayed choked
+end
+
+% Convert to English units
+F_thrust_lbf = F_thrust * 0.224809;
+a_g = a / 9.81;
+v_mph = v * 2.237;
+x_ft = x * 3.28084;
+
+%% === PLOTS ===
+figure;
+
+set(gca, 'Color', 'k');  % Whole figure background
+
+% === Thrust ===
+subplot(4,1,1);
+plot(time, F_thrust_lbf, 'LineWidth', 2); grid on;
+ylabel('Thrust (lbf)'); title('Thrust vs Time');
+if ~isnan(choke_break_time)
+    xline(choke_break_time, '--k', 'LineWidth', 1);
+end
+
+% === Acceleration ===
+subplot(4,1,2);
+plot(time, a_g, 'LineWidth', 2); grid on;
+ylabel('Accel (g)'); title('Acceleration vs Time');
+if ~isnan(choke_break_time)
+    xline(choke_break_time, '--k', 'LineWidth', 1);
+end
+
+% === Velocity ===
+subplot(4,1,3);
+plot(time, v_mph, 'LineWidth', 2); grid on;
+ylabel('Velocity (mph)'); title('Velocity vs Time');
+if ~isnan(choke_break_time)
+    xline(choke_break_time, '--k', 'LineWidth', 1);
+end
+
+% === Position ===
+subplot(4,1,4);
+plot(time, x_ft, 'LineWidth', 2); grid on;
+ylabel('Position (ft)'); xlabel('Time (s)');
+title('Position vs Time');
+if ~isnan(choke_break_time)
+    xline(choke_break_time, '--k', 'LineWidth', 1);
+end
+
+text(choke_break_time, ylim(gca)*[0;1]*0.95, 'Choked Flow Ends', ...
+    'HorizontalAlignment', 'right', 'VerticalAlignment', 'top', ...
+    'FontSize', 8, 'FontWeight', 'bold');
