@@ -24,12 +24,29 @@ a2 = zeros(size(t2));
 v2 = v1(end) * ones(size(t2));
 x2 = x1(end) + cumtrapz(t2, v2);
 
-%% === PHASE 3: Motor Burn with CSV Thrust Curve ===
-thrust_data = readmatrix('data/AeroTech_I115W.csv');
-thrust_time = thrust_data(:,1);
-thrust_force = thrust_data(:,2);
+%% === PHASE 3: Motor Burn with Imported Thrust Curve ===
+% This section accepts a generic thrust curve CSV file with columns:
+% [Time (s), Thrust (lbf or N)] — units must be known/set below.
+
+csv_file = 'data/scuba_thrust_curve.csv';  % Can also be a scuba-generated file
+thrust_data = readmatrix(csv_file);    % Generic time vs. thrust input
+thrust_time = thrust_data(:,1);        % Time in seconds
+thrust_force_raw = thrust_data(:,2);   % Thrust in either lbf or N
+
+% === Set units of input thrust data
+input_thrust_in_lbf = true;  % Toggle: set false if already in N
+
+if input_thrust_in_lbf
+    thrust_force = thrust_force_raw / 0.224809;  % Convert lbf to N
+else
+    thrust_force = thrust_force_raw;
+end
+
+% === Interpolate thrust to match sim time step
 t3 = 0:dt:thrust_time(end);
 F_interp = interp1(thrust_time, thrust_force, t3, 'linear', 0);
+
+% === Calculate acceleration, velocity, position during burn
 a3 = F_interp / m;
 v3 = v2(end) + cumtrapz(t3, a3);
 x3 = x2(end) + cumtrapz(t3, v3);

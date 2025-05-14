@@ -13,6 +13,8 @@ mass_total = 81.65;     % Mass of rider + vehicle
 dt = 0.01;              % Time step (s)
 t_max = 10;             % Total simulation time (s)
 
+export_thrust_curve_csv = true;  % Set to false to skip export
+
 %% === INITIAL CONDITIONS ===
 rho0 = P0 / (R * T0);             % Initial air density
 m_air = rho0 * V_tank;            % Initial air mass
@@ -83,6 +85,25 @@ F_thrust_lbf = F_thrust * 0.224809;
 a_g = a / 9.81;
 v_mph = v * 2.237;
 x_ft = x * 3.28084;
+
+%% === OPTIONAL: Export CSV Thrust Curve ===
+if export_thrust_curve_csv
+    thrust_data = [time(:), F_thrust_lbf(:)];  % Time in seconds, Thrust in lbf
+    header = {'Time_s', 'Thrust_lbf'};
+    csv_filename = fullfile('data', 'scuba_thrust_curve.csv');  % adjust path as needed
+
+    % Ensure folder exists
+    if ~exist('data', 'dir')
+        mkdir('data');
+    end
+
+    % Write CSV with header
+    fid = fopen(csv_filename, 'w');
+    fprintf(fid, '%s,%s\n', header{:});
+    fclose(fid);
+    dlmwrite(csv_filename, thrust_data, '-append');
+    fprintf('CSV thrust curve written to: %s\n', csv_filename);
+end
 
 %% === PLOTS ===
 figure;
