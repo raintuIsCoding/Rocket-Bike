@@ -2,11 +2,11 @@ clc; clear; close all;
 
 %% === CONFIGURABLE PARAMETERS ===
 P0 = 2000 * 6894.76;    % Initial tank pressure in Pa (2000 psi)
-V_tank = 11e-3;         % Tank volume in m^3 (11 liters)
+V_tank = 2*1.11432e-3;         % Tank volume in m^3 (11 liters)
 T0 = 293;               % Initial temperature in K
 R = 287;                % Specific gas constant for air (J/kg·K)
 gamma = 1.4;            % Heat capacity ratio for air
-d_nozzle = 0.0127;     % Nozzle diameter in meters (1/2 in)
+d_nozzle = 0.0127/2;     % Nozzle diameter in meters (1/2 in)
 A_nozzle = pi * (d_nozzle/2)^2;
 P_atm = 83400;         % Atmospheric pressure (Pa)
 mass_total = 81.65;     % Mass of rider + vehicle
