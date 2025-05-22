@@ -6,8 +6,8 @@ export_thrust_curve_csv = true;  % Set to false to skip export
 %% === CONFIGURABLE PARAMETERS ===
 
 % === Adjustable Variables ===
-P0 = 1350 * 6894.76;            % Initial tank pressure (psi -> Pa)
-d_nozzle = (1/4) * 0.0254;      % Nozzle diameter (1/2 in -> m)
+P0 = 1200 * 6894.76;            % Initial tank pressure (psi -> Pa)
+d_nozzle = (1/2) * 0.0254;      % Nozzle diameter (1/2 in -> m)
 
 % === Measurements & Geometry ===
 V_tank = 10 * 1e-3;             % Tank volume (liters -> m^3)
@@ -94,47 +94,6 @@ F_thrust_lbf = F_thrust * 0.224809;
 a_g = a / 9.81;
 v_mph = v * 2.237;
 x_ft = x * 3.28084;
-
-%% === PERFORMANCE METRICS (Command Window Output) ===
-
-% Total impulse (N·s)
-total_impulse = trapz(time, F_thrust);
-
-% Peak thrust (N and lbf)
-peak_thrust = max(F_thrust);
-peak_thrust_lbf = peak_thrust * 0.224809;
-
-% Peak acceleration (g)
-peak_accel_g = max(a_g);
-
-% Δv (m/s and mph)
-delta_v = v(end) - v(1);       % m/s
-delta_v_mph = delta_v * 2.237; % mph
-
-% Total distance traveled (m and ft)
-total_distance_m = x(end);
-total_distance_ft = total_distance_m * 3.28084;
-
-% Burn duration
-burn_duration = time(end);  % Time at which thrust effectively ends
-
-% Burn duration while flow is choked
-if exist('choke_break_index', 'var')
-    burn_choked = time(choke_break_index);  % Time at which choked flow ends
-else
-    burn_choked = time(end);  % Flow remained choked entire burn
-end
-
-% === Display Results ===
-fprintf('\n=== PERFORMANCE SUMMARY ===\n');
-fprintf('Total Impulse:          %.2f N·s\n', total_impulse);
-fprintf('Peak Thrust:            %.2f N (%.2f lbf)\n', peak_thrust, peak_thrust_lbf);
-fprintf('Peak Acceleration:      %.2f g\n', peak_accel_g);
-fprintf('Delta-V:                %.2f m/s (%.2f mph)\n', delta_v, delta_v_mph);
-fprintf('Total Distance:         %.2f m (%.2f ft)\n', total_distance_m, total_distance_ft);
-fprintf('Burn Duration:          %.2f s\n', burn_duration);
-fprintf('Burn Duration (Choked): %.2f s\n', burn_choked);
-fprintf('=============================\n\n');
 
 %% === OPTIONAL: Export CSV Thrust Curve ===
 if export_thrust_curve_csv
