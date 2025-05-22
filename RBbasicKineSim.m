@@ -1,3 +1,4 @@
+%% HOUSEKEEPING
 clc; clear; close all;
 
 %% === SIMULATION INPUT PARAMETERS ===
